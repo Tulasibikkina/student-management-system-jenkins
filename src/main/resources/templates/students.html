@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<header class="topbar">
+    <div>
+        <h1>Student Management System</h1>
+        <p>Manage student records in one place</p>
+    </div>
+    <span class="tag">Spring Boot + Jenkins</span>
+</header>
+
+<main class="container">
+    <div class="notice" th:if="${success}" th:text="${success}"></div>
+
+    <section class="panel">
+        <h2 th:text="${editMode} ? 'Update Student' : 'Add New Student'">Add New Student</h2>
+        <form th:object="${student}"
+              th:action="${editMode} ? @{/students/update/{id}(id=${student.id})} : @{/students}"
+              method="post">
+            <div class="form-grid">
+                <label>Student Name
+                    <input type="text" th:field="*{name}" placeholder="Enter full name" required>
+                    <small class="error" th:errors="*{name}"></small>
+                </label>
+                <label>Roll Number
+                    <input type="text" th:field="*{rollNumber}" placeholder="e.g. 101" required>
+                    <small class="error" th:errors="*{rollNumber}"></small>
+                </label>
+                <label>Email
+                    <input type="email" th:field="*{email}" placeholder="student@example.com" required>
+                    <small class="error" th:errors="*{email}"></small>
+                </label>
+                <label>Department
+    <select th:field="*{department}" required>
+        <option value="">Select Department</option>
+        <option value="Information Technology">Information Technology</option>
+        <option value="Computer Science">Computer Science</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Mechanical">Mechanical</option>
+        <option value="Civil">Civil</option>
+        <option value="Electrical">Electrical</option>
+    </select>
+    <small class="error" th:errors="*{department}"></small>
+</label>
+            </div>
+            <div class="actions">
+                <button class="primary" type="submit" th:text="${editMode} ? 'Update Student' : 'Add Student'">Add Student</button>
+                <a class="secondary" th:if="${editMode}" th:href="@{/students}">Cancel</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="section-heading">
+            <div>
+                <h2>Student Records</h2>
+                <p th:text="'Total students: ' + ${#lists.size(students)}">Total students: 0</p>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr><th>Roll Number</th><th>Name</th><th>Email</th><th>Department</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${students}">
+                    <td th:text="${s.rollNumber}"></td>
+                    <td th:text="${s.name}"></td>
+                    <td th:text="${s.email}"></td>
+                    <td th:text="${s.department}"></td>
+                    <td class="row-actions">
+                        <a class="edit" th:href="@{/students/edit/{id}(id=${s.id})}">Edit</a>
+                        <form th:action="@{/students/delete/{id}(id=${s.id})}" method="post"
+                              onsubmit="return confirm('Delete this student?')">
+                            <button class="delete" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(students)}">
+                    <td colspan="5" class="empty">No students added yet. Use the form above to add one.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<footer>Student Management System · Built with Spring Boot</footer>
+</body>
+</html>
