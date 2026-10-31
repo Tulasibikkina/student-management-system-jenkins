@@ -11,7 +11,7 @@ pipeline {
 
         stage('Build and Test') {
             steps {
-                bat 'mvn -B clean test package'
+                bat '"C:\\Users\\B.HEMA\\Downloads\\apache-maven-3.9.16-bin\\apache-maven-3.9.16\\bin\\mvn.cmd" clean test package'
             }
         }
 
