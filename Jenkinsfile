@@ -16,64 +16,63 @@ pipeline {
             }
         }
 
-        s
-stage('Deploy Locally') {
-    steps {
-        powershell '''
-            $java = 'C:\\Program Files\\Java\\jdk-25\\bin\\java.exe'
-            $jar = Join-Path (Get-Location) 'target/student-management.jar'
-            $stdout = Join-Path (Get-Location) 'target/app-output.log'
-            $stderr = Join-Path (Get-Location) 'target/app-error.log'
+        stage('Deploy Locally') {
+            steps {
+                powershell '''
+                    $java = 'C:\\Program Files\\Java\\jdk-25\\bin\\java.exe'
+                    $jar = Join-Path (Get-Location) 'target/student-management.jar'
+                    $stdout = Join-Path (Get-Location) 'target/app-output.log'
+                    $stderr = Join-Path (Get-Location) 'target/app-error.log'
 
-            if (-not (Test-Path $jar)) {
-                throw "JAR file not found: $jar"
-            }
-
-            $app = Start-Process -FilePath $java `
-                -ArgumentList ('-jar "' + $jar + '"') `
-                -WorkingDirectory (Get-Location) `
-                -RedirectStandardOutput $stdout `
-                -RedirectStandardError $stderr `
-                -PassThru
-
-            Write-Host "Started application process: $($app.Id)"
-
-            $deployed = $false
-
-            for ($i = 0; $i -lt 30; $i++) {
-                Start-Sleep -Seconds 2
-                $app.Refresh()
-
-                if ($app.HasExited) {
-                    Write-Host "Application exited. Startup logs:"
-                    if (Test-Path $stdout) { Get-Content $stdout -Tail 30 }
-                    if (Test-Path $stderr) { Get-Content $stderr -Tail 30 }
-                    throw "Application process stopped unexpectedly."
-                }
-
-                try {
-                    $response = Invoke-WebRequest 'http://localhost:8081/students' -UseBasicParsing -TimeoutSec 3
-                    if ($response.StatusCode -eq 200) {
-                        $deployed = $true
-                        break
+                    if (-not (Test-Path $jar)) {
+                        throw "JAR file not found: $jar"
                     }
-                }
-                catch {
-                    # Application may still be starting.
-                }
-            }
 
-            if (-not $deployed) {
-                if (Test-Path $stdout) { Get-Content $stdout -Tail 30 }
-                if (Test-Path $stderr) { Get-Content $stderr -Tail 30 }
-                throw "Application did not become available on port 8081."
-            }
+                    $app = Start-Process -FilePath $java `
+                        -ArgumentList ('-jar "' + $jar + '"') `
+                        -WorkingDirectory (Get-Location) `
+                        -RedirectStandardOutput $stdout `
+                        -RedirectStandardError $stderr `
+                        -PassThru
 
-            Write-Host "Deployment verified. Application is running at http://localhost:8081/students"
-        '''
+                    Write-Host "Started application process: $($app.Id)"
+
+                    $deployed = $false
+
+                    for ($i = 0; $i -lt 30; $i++) {
+                        Start-Sleep -Seconds 2
+                        $app.Refresh()
+
+                        if ($app.HasExited) {
+                            Write-Host "Application exited. Startup logs:"
+                            if (Test-Path $stdout) { Get-Content $stdout -Tail 30 }
+                            if (Test-Path $stderr) { Get-Content $stderr -Tail 30 }
+                            throw "Application process stopped unexpectedly."
+                        }
+
+                        try {
+                            $response = Invoke-WebRequest 'http://localhost:8081/students' -UseBasicParsing -TimeoutSec 3
+                            if ($response.StatusCode -eq 200) {
+                                $deployed = $true
+                                break
+                            }
+                        }
+                        catch {
+                            # Application may still be starting.
+                        }
+                    }
+
+                    if (-not $deployed) {
+                        if (Test-Path $stdout) { Get-Content $stdout -Tail 30 }
+                        if (Test-Path $stderr) { Get-Content $stderr -Tail 30 }
+                        throw "Application did not become available on port 8081."
+                    }
+
+                    Write-Host "Deployment verified. Application is running at http://localhost:8081/students"
+                '''
+            }
+        }
     }
-}
-
 
     post {
         success {
